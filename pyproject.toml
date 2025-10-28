@@ -1,0 +1,18 @@
+[project]
+name = "finassistant-mcphost"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "python-dotenv",
+    "pydantic",
+    "pydantic-settings",
+    "loguru",
+    "langchain>=0.3.28",
+    "langgraph>=0.7.0",
+    "langchain-openai>=0.2.11",
+    "mcp>=1.17.0",
+]
