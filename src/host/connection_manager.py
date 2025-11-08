@@ -14,7 +14,7 @@ AVAILABLE_SERVERS = {
 }
 
 
-class ConnectionManager:
+class MCPClient:
     def __init__(self):
         self.session: ClientSession | None = None
         self.exit_stack = AsyncExitStack()
