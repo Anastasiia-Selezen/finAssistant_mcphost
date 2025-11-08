@@ -32,7 +32,7 @@ class ChatResult:
 
 
 class MCPHost:
-    def __init__(self, model: str = "gpt-4o-mini"):
+    def __init__(self, model: str = "gpt-5-mini"):
         self.model = model
         openai_api_key = settings.OPENAI_API_KEY
         if not openai_api_key:
