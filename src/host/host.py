@@ -16,7 +16,7 @@ from pydantic import BaseModel, create_model
 
 from ..config import settings
 
-from .connection_manager import ConnectionManager
+from .connection_manager import MCPClient
 
 
 logging.basicConfig(level=logging.INFO)
@@ -42,22 +42,22 @@ class MCPHost:
             temperature=0,
             api_key=openai_api_key,
         )
-        self.connection_manager = ConnectionManager()
+        self.client = MCPClient()
         self.thread_id = str(uuid.uuid4())
         self._agent = None
         self._recursion_limit = 10
 
     async def initialize(self):
-        await self.connection_manager.initialize_all()
+        await self.client.initialize_all()
 
     async def get_system_prompt(self, name, args) -> str:
-        if not self.connection_manager.is_initialized:
-            raise RuntimeError("ConnectionManager is not initialized. Call initialize_all() first.")
-        return await self.connection_manager.get_prompt(name, args)
+        if not self.client.is_initialized:
+            raise RuntimeError("MCP Client is not initialized. Call initialize_all() first.")
+        return await self.client.get_prompt(name, args)
 
     async def process_query(self, prompt_text: str) -> ChatResult:
-        if not self.connection_manager.is_initialized:
-            raise RuntimeError("ConnectionManager is not initialized. Call initialize_all() first.")
+        if not self.client.is_initialized:
+            raise RuntimeError("MCP Client is not initialized. Call initialize_all() first.")
 
         agent = await self._get_agent()
         messages = [SystemMessage(content=prompt_text)] if prompt_text else []
@@ -96,7 +96,7 @@ class MCPHost:
         return self._agent
 
     async def _load_langgraph_tools(self) -> list[StructuredTool]:
-        tools_response = await self.connection_manager.get_mcp_tools()
+        tools_response = await self.client.get_mcp_tools()
         langchain_tools: list[StructuredTool] = []
 
         for tool in tools_response.tools:
@@ -108,7 +108,7 @@ class MCPHost:
                 if not isinstance(payload, dict):
                     payload = {"value": payload}
                 logger.info("Calling MCP tool '%s' with %s", _name, payload)
-                result = await self.connection_manager.call_tool(_name, payload)
+                result = await self.client.call_tool(_name, payload)
                 logger.info("MCP tool '%s' returned %s", _name, result)
                 return result
 
@@ -193,14 +193,14 @@ class MCPHost:
         raise RuntimeError("Synchronous execution is not supported for MCP tools.")
 
     async def get_mcp_tools(self):
-        if not self.connection_manager.is_initialized:
-            raise RuntimeError("ConnectionManager is not initialized. Call initialize_all() first.")
-        return await self.connection_manager.get_mcp_tools()
+        if not self.client.is_initialized:
+            raise RuntimeError("MCP Client is not initialized. Call initialize_all() first.")
+        return await self.client.get_mcp_tools()
 
     async def call_tool(self, function_name: str, function_args: dict) -> Any:
-        if not self.connection_manager.is_initialized:
-            raise RuntimeError("ConnectionManager is not initialized. Call initialize_all() first.")
-        return await self.connection_manager.call_tool(function_name, function_args)
+        if not self.client.is_initialized:
+            raise RuntimeError("MCP Client is not initialized. Call initialize_all() first.")
+        return await self.client.call_tool(function_name, function_args)
 
     async def cleanup(self):
-        await self.connection_manager.cleanup_all()
+        await self.client.cleanup_all()
